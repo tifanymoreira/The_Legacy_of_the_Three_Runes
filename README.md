@@ -1,2 +1,15 @@
-# The_Legacy_of_the_Three_Runes
-The Legacy of the Three Runes is a short top-down Dark Fantasy quest. Play as a knight tasked with recovering 3 shattered Runes in a cursed forest to restore the Amulet and purify the Crypt before the darkness prevails. Built with Phaser 3.
+# The Legacy of the Three Runes
+
+*"This world... all we knew turned to ash."*
+
+The Fire Mage used the forbidden power: The Legacy of the Three Runes. Now, the Hellish Souls wander tormented, trapped by this dark magic.
+
+But the Storm is coming.
+
+Take on the role of the "Storm", the only one who can face his inferno. Your mission is to free every soul, using their light to gain the strength needed to break the Runes.
+
+The journey begins now.
+
+---
+
+A 2D dark fantasy action-platformer, built with **Phaser 3**.
