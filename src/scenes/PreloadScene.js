@@ -42,6 +42,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.audio('ambience_introduction', 'assets/sound_effect/ambience_introduction.mp3');
     this.load.audio('dialog_introduction', 'assets/sound_effect/dialog_introduction.mp3');
     this.load.audio('game_scene', 'assets/sound_effect/game_scene.mp3');
+    this.load.audio('menu_sound', 'assets/sound_effect/menu_sound.mp3');
+    this.load.audio('button_press', 'assets/sound_effect/button_press.mp3');
+    this.load.audio('button_select', 'assets/sound_effect/button_select.mp3');
     this.load.audio('walking', 'assets/sound_effect/walking.mp3');
     this.load.audio('running', 'assets/sound_effect/running.mp3');
     this.load.audio('jumping', 'assets/sound_effect/jumping.mp3');

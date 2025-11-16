@@ -8,12 +8,21 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
-    // 1. Adicionar o background
+    // 1. Adicionar o background e música
     this.add.image(
       this.cameras.main.width * 0.5,
       this.cameras.main.height * 0.5,
       'menu_background'
     ).setDisplaySize(this.cameras.main.width, this.cameras.main.height);
+
+    // Toca a música de ambiente em loop
+    this.menuSound = this.sound.add('menu_sound', { loop: true, volume: 0.5 });
+    this.menuSound.play();
+
+
+    this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 })
+    this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 })
+
 
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
@@ -21,7 +30,7 @@ export default class MenuScene extends Phaser.Scene {
     // 2. Botão "Começar"
     this.createButton(
       centerX,
-      centerY + 100,
+      centerY - 50,
       'Começar',
       this.startGame.bind(this)
     );
@@ -29,7 +38,7 @@ export default class MenuScene extends Phaser.Scene {
     // 3. Botão "Controles"
     this.createButton(
       centerX,
-      centerY + 180,
+      centerY + 30,
       'Controles',
       this.showControlsModal.bind(this)
     );
@@ -39,8 +48,11 @@ export default class MenuScene extends Phaser.Scene {
    * Inicia a transição para a cena de Introdução
    */
   startGame() {
-    if (this.controlsModal) return; 
+    if (this.controlsModal) {
+      return
+    }
 
+    if (this.menuSound) this.menuSound.stop();
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.start('IntroductionScene');
@@ -61,7 +73,7 @@ export default class MenuScene extends Phaser.Scene {
     const bgColor = 0x1a1a1a;
     const strokeColor = 0x555555;
     const textColor = '#E0E0E0';
-    
+
     const hoverBgColor = 0x333333;
     const hoverStrokeColor = 0xaaaaaa;
     const hoverTextColor = '#ffffff';
@@ -85,29 +97,33 @@ export default class MenuScene extends Phaser.Scene {
       .setInteractive();
 
     buttonContainer.on('pointerover', () => {
-      buttonBG.clear()
-        .fillStyle(hoverBgColor, 0.9)
-        .lineStyle(3, hoverStrokeColor, 1.0)
-        .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
-        .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+      this.buttonSelect.play(),
+        buttonBG.clear()
+          .fillStyle(hoverBgColor, 0.9)
+          .lineStyle(3, hoverStrokeColor, 1.0)
+          .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+          .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
       buttonText.setFill(hoverTextColor);
     });
 
     buttonContainer.on('pointerout', () => {
-      buttonBG.clear()
-        .fillStyle(bgColor, 0.8)
-        .lineStyle(3, strokeColor, 1.0)
-        .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
-        .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+      this.buttonSelect.play(),
+        buttonBG.clear()
+          .fillStyle(bgColor, 0.8)
+          .lineStyle(3, strokeColor, 1.0)
+          .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+          .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
       buttonText.setFill(textColor);
     });
 
     buttonContainer.on('pointerdown', () => {
-      buttonContainer.setScale(0.98);
+      this.buttonPress.play(),
+        buttonContainer.setScale(0.98);
     });
-    
+
     buttonContainer.on('pointerup', (pointer) => {
-      buttonContainer.setScale(1.0);
+      this.buttonPress.play(),
+        buttonContainer.setScale(1.0);
       if (buttonContainer.getBounds().contains(pointer.x, pointer.y)) {
         onClick();
       }
@@ -123,7 +139,7 @@ export default class MenuScene extends Phaser.Scene {
     if (this.controlsModal) {
       this.controlsModal.destroy();
     }
-    
+
     const modalWidth = 500;
     const modalHeight = 400;
     const { width: gameWidth, height: gameHeight } = this.cameras.main;
@@ -133,7 +149,7 @@ export default class MenuScene extends Phaser.Scene {
       .fillStyle(0x000000, 0.8)
       .fillRect(0, 0, gameWidth, gameHeight)
       .setInteractive()
-      .on('pointerdown', () => {}); 
+      .on('pointerdown', () => { });
 
     // 2. Painel do Modal
     const panel = this.add.graphics()
