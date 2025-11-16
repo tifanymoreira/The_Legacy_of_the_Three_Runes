@@ -1,5 +1,5 @@
 {
-  "name": "catador-queijos",
+  "name": "hooded-protagonist",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^7.1.7"
+    "vite": "^6.3.5"
   },
   "dependencies": {
     "phaser": "^3.90.0"

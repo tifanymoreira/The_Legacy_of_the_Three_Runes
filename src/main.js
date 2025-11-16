@@ -1,61 +1,59 @@
-//------------------------------------------------------------------------
-// Main.js : Arquivo principal do Jogo Dark Fantasy
-
 import Phaser from 'phaser';
 
-//importa as cenas
-import PreLoadScene from './scenes/PreLoadScene.js';
+// Importa as cenas do jogo
+import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
-import GameScene from './scenes.GameScene.js'; // Nível 1 - Floresta
-import Level2Scene from './scenes/Level2Scene.js'; // Nível 2 - Cripta
-import WinScene from './scenes/WinScene.js';   // Tela de Vitória
+import IntroductionScene from './scenes/IntroductionScene.js';
+import GameScene from './scenes/GameScene.js';
+import SecondRuneScene from './scenes/SecondRuneScene.js';
 
-//Configurações Globais
+// Configurações globais
+
+// Dimensões da tela do jogo
 const WIDTH = 1000;
 const HEIGHT = 700;
 
-//Configurações compartilhadas
+// Configurações compartilhadas entre as cenas
 const SHARED_CONFIG = {
   width: WIDTH,
   height: HEIGHT,
-  debug: false // Mude para 'true' para ver as caixas de colisão
+  debug: false
 };
 
-//Lista das cenas
+// Lista das cenas que compõem o jogo
 const SCENES = [
-  PreLoadScene,
+  PreloadScene,
   MenuScene,
-  GameScene,   // Nível 1
-  Level2Scene, // Nível 2
-  WinScene     // Vitória
+  IntroductionScene,
+  GameScene,
+  SecondRuneScene
 ]
 
+// Cria uma instância de cena com a configuração compartilhada
 const createScene = Scene => new Scene(SHARED_CONFIG);
+
+// Inicializa todas as cenas do jogo
 const initScenes = () => SCENES.map(createScene);
 
-//------------------------------------------------------------------------
-//Configuração geral do Phaser.Game
-
+// Configuração geral do Phaser.Game
 const config = {
   type: Phaser.AUTO,
   ...SHARED_CONFIG,
-  backgroundColor: '#000000',
+  backgroundColor: '#0080ff',
   parent: 'game-container',
   pixelArt: true,
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 0 },
       debug: SHARED_CONFIG['debug'],
     }
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.Center_Both
+    autoCenter: Phaser.Scale.CENTER_BOTH
   },
   scene: initScenes()
 };
 
-//------------------------------------------------------------------------
-//Inicializa a instância principal do jogo
+// Inicializa a instância principal do jogo com a configuração definida
 new Phaser.Game(config);

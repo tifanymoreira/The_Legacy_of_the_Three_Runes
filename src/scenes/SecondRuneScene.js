@@ -1,72 +1,82 @@
+// -----------------------------------------------------------------------------
+// src/scenes/SecondRuneScene.js
+// -----------------------------------------------------------------------------
+
 import Phaser from 'phaser';
 
-// Classe que representa a cena principal do jogo
-export default class GameScene extends Phaser.Scene {
+// -----------------------------------------------------------------------------
+
+// Classe que representa a cena da Segunda Runa
+export default class SecondRuneScene extends Phaser.Scene {
 
   constructor(config) {
-    super({ key: 'GameScene' }, config);
+    super({ key: 'SecondRuneScene' }, config);
     this.config = config;
   }
+
+  // ---------------------------------------------------------------------------
 
   // Inicializa as propriedades da cena
   init() {
     this.gravity = 500;
     this.player = null;
     this.playerSpeed = 200;
-    this.playerRunSpeed = 350; // Velocidade correndo
+    this.playerRunSpeed = 350;
     this.playerJumpForce = 520;
 
-    // Propriedades dos coletáveis
+    // Coletáveis
     this.fires = null;
     this.score = 0;
     this.scoreText = null;
-    this.totalFires = 0; 
+    this.totalFires = 0;
 
-    // Propriedades de Saúde e UI
-    this.health = 6; 
+    // Saúde e UI
+    this.health = 6;
     this.hearts = [];
     this.soulIcon = null;
 
-    // Propriedades de Áudio
+    // Áudio
     this.music = null;
     this.walkSound = null;
     this.runSound = null;
 
+    // Estado de Pulo
     this.wasInAir = false;
     
     this.isTransitioning = false;
   }
 
-  // Cria os elementos visuais e lógicos da cena
+  // ---------------------------------------------------------------------------
+
+  // Cria os elementos da cena
   create() {
     
+    // --- Iniciar sons ---
     this.music = this.sound.add('game_scene', { loop: true, volume: 0.4 });
     this.music.play();
 
-    // Sons de movimento (loop)
     this.walkSound = this.sound.add('walking', { loop: true, volume: 0.5 });
     this.runSound = this.sound.add('running', { loop: true, volume: 0.5 });
     
+    // --- Criação ---
     this.createBackground();
-    this.createGround();
-    this.createUpGround();
-    this.createStairs();
+    this.createGround();    
+    this.createPlatforms(); 
 
+    // Elementos
     this.createPlayer();
     this.createFires(); 
-
     this.createUI();
 
-    // Configura física do Player
+    // Física do Player
     this.player.body.setGravityY(this.gravity);
     this.player.setCollideWorldBounds(true);
 
-    // Colisões
+    // Colisões 
     this.physics.add.collider(this.player, this.ground);
-    this.physics.add.collider(this.player, this.upGround);
-    this.physics.add.collider(this.player, this.stairs);
+    this.physics.add.collider(this.player, this.platforms); 
 
-    // Física de Coleta (Overlap)
+    // Overlap de Coleta
     this.physics.add.overlap(
       this.player,
       this.fires,
@@ -75,6 +85,7 @@ export default class GameScene extends Phaser.Scene {
       this
     );
 
+    // --- LÓGICA DO TECLADO ---
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.eKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
@@ -82,12 +93,14 @@ export default class GameScene extends Phaser.Scene {
 
     this.input.mouse.disableContextMenu();
 
+    // --- Mensagem de Instrução  ---
     this.showInstructionMessage();
   }
 
+  // ---------------------------------------------------------------------------
+
   // Lógica do Teclado (Update)
   update() {
-
     if (this.health === 0 || this.isTransitioning) {
       this.walkSound.stop();
       this.runSound.stop();
@@ -104,6 +117,7 @@ export default class GameScene extends Phaser.Scene {
 
     const playerOnFloor = this.player.body.onFloor();
     
+    // Som de Aterrissagem
     if (playerOnFloor && this.wasInAir) {
       if (!isUpJustDown) {
         this.sound.play('landing', { volume: 0.7 });
@@ -111,14 +125,15 @@ export default class GameScene extends Phaser.Scene {
     }
     this.wasInAir = !playerOnFloor;
 
-
     const currentPlayerAnim = this.player.anims.currentAnim?.key;
     const isPlayerPlaying = animKey => this.player.anims.isPlaying && currentPlayerAnim === animKey;
 
+    // Debug Dano
     if (isHKeyJustDown) {
       this.takeDamage(1); 
     }
 
+    // Ataque/Dano
     if (isPlayerPlaying('anim_attack1') || isPlayerPlaying('anim_attack2') || isPlayerPlaying('anim_hurt')) {
       this.player.setVelocityX(0); 
       this.walkSound.stop(); 
@@ -126,6 +141,7 @@ export default class GameScene extends Phaser.Scene {
       return; 
     }
 
+    // Novo Ataque
     if (isSpaceJustDown) {
       this.player.play('anim_attack1');
       this.player.setVelocityX(0); 
@@ -139,8 +155,8 @@ export default class GameScene extends Phaser.Scene {
       return; 
     }
 
+    // Movimento
     const currentSpeed = isShiftDown ? this.playerRunSpeed : this.playerSpeed;
-
     if (left.isDown) {
       this.player.setVelocityX(-currentSpeed);
       this.player.setFlipX(true);
@@ -153,15 +169,16 @@ export default class GameScene extends Phaser.Scene {
       this.player.setVelocityX(0);
     }
 
+    // Pulo
     if (isUpJustDown && playerOnFloor) {
       this.player.setVelocityY(-this.playerJumpForce);
       this.sound.play('jumping'); 
     }
 
+    // Animação e Som (Idle/Walk/Run/Jump)
     if (playerOnFloor) {
       if (this.player.body.velocity.x !== 0) {
         this.player.play(isShiftDown ? 'anim_run' : 'anim_walk', true);
-        
         if (isShiftDown) {
           if (!this.runSound.isPlaying) this.runSound.play();
           this.walkSound.stop();
@@ -169,7 +186,6 @@ export default class GameScene extends Phaser.Scene {
           if (!this.walkSound.isPlaying) this.walkSound.play();
           this.runSound.stop();
         }
-
       } else {
         this.player.play('anim_idle', true);
         this.walkSound.stop(); 
@@ -182,62 +198,59 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  // Funções auxiliares (Cenário)
+  // ---------------------------------------------------------------------------
+  // Funções de Criação (Cenário)
+  // ---------------------------------------------------------------------------
+
   createBackground() {
     const bg = this.add.image(
       this.config.width * 0.5,
       this.config.height * 0.5,
-      'background'
+      'second_rune_background' 
     ).setDisplaySize(this.config.width, this.config.height);
   }
 
-  createStairs() {
-    const groundTop = (this.config.height * 0.5 + 215) - 10;
-    const rampWidth = 180;
-    const rampHeight = 175;
-    const rampEndX = this.config.width;
-    this.stairs = this.physics.add.staticGroup();
-
-    for (let i = 0; i < rampWidth; i++) {
-      const x = (rampEndX - rampWidth) + i;
-      const y = (groundTop - (i * (rampHeight / rampWidth)));
-      this.stairs.create(x, y)
-        .setSize(1, 1)    
-        .setVisible(false)
-        .setOrigin(0, 1);
-    }
-  }
-
+  //  Posição Y corrigida e debug visual reativado
   createGround() {
     const groundRect = this.add.rectangle(
       this.config.width / 2,
-      this.config.height * 0.5 + 215, // Y = 565
+      this.config.height * 0.5 + 215, 
       this.config.width,
       20,
-    ).setVisible(false); 
+    )
+    .setVisible(true)
+    .setFillStyle(0x00ff00, 0.4);
+
     this.physics.add.existing(groundRect, true);
     this.ground = groundRect;
   }
 
-  createUpGround() {
-    const platformWidth = 740;
-    const platformCenterX = platformWidth / 1.8;
-    const platformCenterY = this.config.height * -0.02 + 215; // Y = 201
-    const groundRect = this.add.rectangle(
-      platformCenterX,
-      platformCenterY,
-      platformWidth,
-      20,
-    ).setVisible(false); 
-    this.physics.add.existing(groundRect, true);
-    this.upGround = groundRect;
+  //  Debug visual reativado (usando suas novas coordenadas)
+  createPlatforms() {
+    this.platforms = this.physics.add.staticGroup();
+
+    // Usando as coordenadas que você ajustou
+    const platformData = [
+      { x: 250, y: 380, w: 120 }, // Top Left
+      { x: 400, y: 450, w: 120 }, // Bottom Left
+      { x: 750, y: 380, w: 120 }, // Top Right
+      { x: 650, y: 480, w: 200 }  // Bottom Right
+    ];
+
+    platformData.forEach(data => {
+      const plat = this.add.rectangle(data.x, data.y, data.w, 20)
+        .setVisible(true) // Tornando visível para debug
+        .setFillStyle(0x00ff00, 0.4); // Cor Verde, 40% de opacidade
+        
+      this.physics.add.existing(plat, true);
+      this.platforms.add(plat);
+    });
   }
 
-  // Player
   createPlayer() {
     this.player = this.physics.add.sprite(
-      200,
-      this.config.height * 0.5, // 350
+      50, // Posição X inicial
+      500, // Posição Y (cai para o chão)
       'player_idle'
     ).setScale(1.5); 
 
@@ -245,17 +258,24 @@ export default class GameScene extends Phaser.Scene {
     this.player.play('anim_idle', true);
   }
 
-  // Funções dos Foguinhos
+  // ---------------------------------------------------------------------------
+  // Funções dos Foguinhos (alminhas)
+  // ---------------------------------------------------------------------------
+
   createFires() {
     this.fires = this.physics.add.staticGroup();
+
     const fireLocations = [
-      { x: 300, y: 535 }, // Chão principal (Y=565 - 30)
-      { x: 500, y: 535 }, // Chão principal
-      { x: 700, y: 535 }, // Chão principal
-      { x: 100, y: 181 }, // Plataforma de cima (Y=201 - 20)
-      { x: 350, y: 181 }, // Plataforma de cima
-      { x: 600, y: 181 }  // Plataforma de cima
+      // Chão
+      { x: 100, y: 535 },  // Ponta esquerda
+      { x: 900, y: 535 },  // Ponta direita
+      // Plataformas
+      { x: 250, y: 350 },  // P1 (TL)
+      { x: 400, y: 420 },  // P2 (BL)
+      { x: 750, y: 350 },  // P3 (TR)
+      { x: 650, y: 450 }   // P4 (BR)
     ];
+
     fireLocations.forEach(fire => {
       this.fires.create(fire.x, fire.y, 'fire')
         .setScale(0.2) 
@@ -276,11 +296,15 @@ export default class GameScene extends Phaser.Scene {
     this.sound.play('soul_collect', { volume: 0.7 }); 
 
     if (this.score === this.totalFires) {
-      this.startNextLevelTransition();
+      console.log("GANHOU A SEGUNDA RUNA!");
+      // this.startNextLevelTransition(); 
     }
   }
 
+  // ---------------------------------------------------------------------------
   // Funções de UI e Saúde
+  // ---------------------------------------------------------------------------
+
   createUI() {
     const margin = 20;
     const spacing = 10;
@@ -288,40 +312,30 @@ export default class GameScene extends Phaser.Scene {
     const iconScale = 0.2;
 
     this.soulIcon = this.add.sprite(margin, margin, 'fire', 0)
-      .setScale(iconScale) 
-      .setOrigin(0, 0)
-      .setScrollFactor(0);
-    
+      .setScale(iconScale).setOrigin(0, 0).setScrollFactor(0);
     const soulHeight = this.soulIcon.displayHeight;
-
     this.scoreText = this.add.text(
       margin + this.soulIcon.displayWidth + spacing, 
       margin + (soulHeight / 2),
-      '0', 
-      {
+      '0', {
         fontSize: '32px', 
         fill: '#E0E0E0',
         fontFamily: 'MedievalSharp, serif',
         stroke: '#000',
         strokeThickness: 5
-    }).setOrigin(0, 0.5)
-     .setScrollFactor(0);
+    }).setOrigin(0, 0.5).setScrollFactor(0);
 
     const y_row2 = margin + soulHeight + spacing;
     let tempHeart = this.add.image(0, 0, 'life').setScale(iconScale);
     const heartHeight = tempHeart.displayHeight;
     tempHeart.destroy();
-
     const heartY = y_row2 + (heartHeight / 2);
     let heartX = margin; 
 
     this.hearts = [];
     for (let i = 0; i < 3; i++) {
       let heart = this.add.image(heartX, heartY, 'life')
-        .setScale(iconScale)
-        .setOrigin(0, 0.5)
-        .setScrollFactor(0);
-      
+        .setScale(iconScale).setOrigin(0, 0.5).setScrollFactor(0);
       this.hearts.push(heart);
       heartX += heartSpacing;
     }
@@ -332,7 +346,6 @@ export default class GameScene extends Phaser.Scene {
     this.hearts.forEach((heart) => {
       const textureWidth = heart.texture.getSourceImage().width;
       const textureHeight = heart.texture.getSourceImage().height;
-
       if (currentHealth >= 2) {
         heart.setCrop(); 
         heart.visible = true;
@@ -351,12 +364,8 @@ export default class GameScene extends Phaser.Scene {
 
   takeDamage(amount) {
     if (this.health === 0 || this.isTransitioning) return;
-
     this.health -= amount;
-    if (this.health < 0) {
-      this.health = 0;
-    }
-
+    if (this.health < 0) this.health = 0;
     this.updateHealthUI();
 
     if (this.health === 0) {
@@ -377,7 +386,6 @@ export default class GameScene extends Phaser.Scene {
           });
         }
       }, this);
-
     } else {
       this.sound.play('hurt'); 
       this.player.play('anim_hurt');
@@ -392,7 +400,10 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  // Funções de Transição e Mensagem
+  // ---------------------------------------------------------------------------
+  // Mensagem de Instrução
+  // ---------------------------------------------------------------------------
+
   showInstructionMessage() {
     const instructionStyle = {
       fontSize: '32px',
@@ -405,14 +416,13 @@ export default class GameScene extends Phaser.Scene {
 
     const instructionText = this.add.text(
       this.config.width / 2,
-      this.config.height / 2 - 120, // Posição
-      'Colete todas as almas para ir para a próxima Runa.',
+      this.config.height / 2 - 120, 
+      'A Segunda Runa. As almas estão ainda mais protegidas.',
       instructionStyle
     ).setOrigin(0.5, 0.5)
      .setScrollFactor(0);
 
-    // Duração de 10 segundos
-    this.time.delayedCall(10000, () => {
+    this.time.delayedCall(5000, () => {
       this.tweens.add({
         targets: instructionText,
         alpha: 0,
@@ -423,29 +433,6 @@ export default class GameScene extends Phaser.Scene {
           }
         }
       });
-    });
-  }
-  
-  startNextLevelTransition() {
-    this.isTransitioning = true; 
-
-    this.player.body.enable = false;
-    this.player.setVelocity(0, 0);
-    this.player.play('anim_idle', true);
-    
-    this.music.stop();
-    this.walkSound.stop();
-    this.runSound.stop();
-    
-    this.tweens.add({
-      targets: [this.soulIcon, this.scoreText, ...this.hearts],
-      alpha: 0,
-      duration: 500
-    });
-
-    this.cameras.main.fadeOut(1000, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start('SecondRuneScene');
     });
   }
 }

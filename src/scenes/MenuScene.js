@@ -2,62 +2,197 @@ import Phaser from 'phaser';
 
 export default class MenuScene extends Phaser.Scene {
 
-    constructor(config) {
-        super({ key: 'MenuScene' }, config);
-        this.config = config;
+  constructor() {
+    super({ key: 'MenuScene' });
+    this.controlsModal = null; // Container para o modal
+  }
+
+  create() {
+    // 1. Adicionar o background
+    this.add.image(
+      this.cameras.main.width * 0.5,
+      this.cameras.main.height * 0.5,
+      'menu_background'
+    ).setDisplaySize(this.cameras.main.width, this.cameras.main.height);
+
+    const centerX = this.cameras.main.width / 2;
+    const centerY = this.cameras.main.height / 2;
+
+    // 2. Botão "Começar"
+    this.createButton(
+      centerX,
+      centerY + 100,
+      'Começar',
+      this.startGame.bind(this)
+    );
+
+    // 3. Botão "Controles"
+    this.createButton(
+      centerX,
+      centerY + 180,
+      'Controles',
+      this.showControlsModal.bind(this)
+    );
+  }
+
+  /**
+   * Inicia a transição para a cena de Introdução
+   */
+  startGame() {
+    if (this.controlsModal) return; 
+
+    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.start('IntroductionScene');
+    });
+  }
+
+  /**
+   * Cria um botão customizado no estilo medieval
+   * @param {number} x - Posição X central
+   * @param {number} y - Posição Y central
+   * @param {string} text - Texto do botão
+   * @param {function} onClick - Função a ser chamada no clique
+   */
+  createButton(x, y, text, onClick) {
+    const buttonWidth = 280;
+    const buttonHeight = 60;
+
+    const bgColor = 0x1a1a1a;
+    const strokeColor = 0x555555;
+    const textColor = '#E0E0E0';
+    
+    const hoverBgColor = 0x333333;
+    const hoverStrokeColor = 0xaaaaaa;
+    const hoverTextColor = '#ffffff';
+
+    const buttonBG = this.add.graphics()
+      .fillStyle(bgColor, 0.8)
+      .lineStyle(3, strokeColor, 1.0)
+      .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+      .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+
+    const buttonText = this.add.text(0, 0, text, {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '36px',
+      fill: textColor,
+      stroke: '#000',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+
+    const buttonContainer = this.add.container(x, y, [buttonBG, buttonText])
+      .setSize(buttonWidth, buttonHeight)
+      .setInteractive();
+
+    buttonContainer.on('pointerover', () => {
+      buttonBG.clear()
+        .fillStyle(hoverBgColor, 0.9)
+        .lineStyle(3, hoverStrokeColor, 1.0)
+        .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+        .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+      buttonText.setFill(hoverTextColor);
+    });
+
+    buttonContainer.on('pointerout', () => {
+      buttonBG.clear()
+        .fillStyle(bgColor, 0.8)
+        .lineStyle(3, strokeColor, 1.0)
+        .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+        .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+      buttonText.setFill(textColor);
+    });
+
+    buttonContainer.on('pointerdown', () => {
+      buttonContainer.setScale(0.98);
+    });
+    
+    buttonContainer.on('pointerup', (pointer) => {
+      buttonContainer.setScale(1.0);
+      if (buttonContainer.getBounds().contains(pointer.x, pointer.y)) {
+        onClick();
+      }
+    });
+
+    return buttonContainer;
+  }
+
+  /**
+   * Cria e exibe o modal de Controles
+   */
+  showControlsModal() {
+    if (this.controlsModal) {
+      this.controlsModal.destroy();
     }
+    
+    const modalWidth = 500;
+    const modalHeight = 400;
+    const { width: gameWidth, height: gameHeight } = this.cameras.main;
 
-    create() {
-        // Efeito de fade-in
-        this.cameras.main.fadeIn(1000, 0, 0, 0);
-        
-        // Adiciona a imagem de fundo
-        const bg = this.add.image(
-            this.config.width * 0.5,
-            this.config.height * 0.5,
-            'menu_bg'
-        );
-        // Ajusta a escala da imagem para cobrir a tela
-        bg.setScale(
-            this.config.width / bg.width,
-            this.config.height / bg.height
-        );
+    // 1. Overlay (Fundo)
+    const overlay = this.add.graphics()
+      .fillStyle(0x000000, 0.8)
+      .fillRect(0, 0, gameWidth, gameHeight)
+      .setInteractive()
+      .on('pointerdown', () => {}); 
 
-        // Título
-        this.add.text(this.config.width * 0.5, 100, 'O Peregrino da Floresta Sombria', {
-            fontSize: '48px',
-            fill: '#FF0000',
-            fontFamily: '"Times New Roman"',
-            fontStyle: 'bold',
-            stroke: '#000',
-            strokeThickness: 8
-        }).setOrigin(0.5);
+    // 2. Painel do Modal
+    const panel = this.add.graphics()
+      .fillStyle(0x111111, 0.95)
+      .lineStyle(4, 0x888888, 1.0)
+      .fillRoundedRect(-modalWidth / 2, -modalHeight / 2, modalWidth, modalHeight, 10)
+      .strokeRoundedRect(-modalWidth / 2, -modalHeight / 2, modalWidth, modalHeight, 10);
 
-        // Texto de Início
-        const startText = this.add.text(this.config.width * 0.5, this.config.height - 100, 'Pressione Espaço para Iniciar', {
-            fontSize: '32px',
-            fill: '#FFFFFF',
-            fontFamily: '"Times New Roman"',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+    // 3. Título
+    const title = this.add.text(0, -modalHeight / 2 + 40, 'Controles', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '48px',
+      fill: '#E0E0E0',
+      stroke: '#000',
+      strokeThickness: 4
+    }).setOrigin(0.5);
 
-        // Animação "pulsante"
-        this.tweens.add({
-            targets: startText,
-            alpha: 0.2,
-            ease: 'Sine.easeInOut',
-            duration: 1200,
-            yoyo: true,
-            repeat: -1
-        });
+    // 4. Texto dos Controles
+    const controlsText = [
+      '[Setas Esq/Dir]: Mover Personagem',
+      '[Seta Cima]: Pular',
+      '[Shift]: Correr',
+      '[Espaço]: Ataque Rápido',
+      '[E]: Ataque Forte',
+      '[H]: Tomar Dano (Debug)'
+    ].join('\n');
 
-        // Inicia o jogo
-        this.input.keyboard.once('keydown-SPACE', () => {
-            // Efeito de fade-out
-            this.cameras.main.fadeOut(1000, 0, 0, 0);
-            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-                this.scene.start('GameScene');
-            });
-        });
-    }
+    const text = this.add.text(-20, 20, controlsText, {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '24px',
+      fill: '#cccccc',
+      align: 'left',
+      lineSpacing: 12
+    }).setOrigin(0.5);
+
+    // 5. Botão Fechar
+    const closeButton = this.add.text(modalWidth / 2 - 30, -modalHeight / 2 + 30, 'X', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '32px',
+      fill: '#aaaaaa',
+      stroke: '#000',
+      strokeThickness: 3
+    }).setOrigin(0.5)
+      .setInteractive();
+
+    closeButton.on('pointerover', () => closeButton.setFill('#ffffff'));
+    closeButton.on('pointerout', () => closeButton.setFill('#aaaaaa'));
+    closeButton.on('pointerdown', () => {
+      if (this.controlsModal) {
+        this.controlsModal.destroy();
+        this.controlsModal = null;
+      }
+    });
+
+    // 6. Container do Modal
+    this.controlsModal = this.add.container(
+      gameWidth / 2,
+      gameHeight / 2,
+      [overlay, panel, title, text, closeButton]
+    );
+  }
 }
