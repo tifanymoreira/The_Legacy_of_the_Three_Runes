@@ -110,7 +110,7 @@ export default class PreloadScene extends Phaser.Scene {
       'player_attack2',
       'assets/images/spritesheets/Lightning Mage/Attack_2.png',
       {
-        frameWidth: 110,
+        frameWidth: 235,
         frameHeight: 128
       }
     );
@@ -126,7 +126,7 @@ export default class PreloadScene extends Phaser.Scene {
       'player_dead',
       'assets/images/spritesheets/Lightning Mage/Dead.png',
       {
-        frameWidth: 110,
+        frameWidth: 128,
         frameHeight: 128
       }
     );
@@ -205,7 +205,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.anims.create({
       key: 'anim_attack2',
       frames: this.anims.generateFrameNumbers('player_attack2', { start: 0, end: 4 }),
-      frameRate: 5, 
+      frameRate: 8, 
       repeat: 0
     });
     this.anims.create({

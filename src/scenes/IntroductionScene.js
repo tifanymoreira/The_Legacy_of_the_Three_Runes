@@ -6,7 +6,7 @@ export default class IntroductionScene extends Phaser.Scene {
     super({ key: 'IntroductionScene' }, config);
     this.config = config;
 
-    // História completa para a introdução
+    // Historinha
     this.dialogueMessages = [
       "Este mundo... tudo o que conhecíamos se tornou cinzas.",
       "Ele usou o poder proibido: o Legado das Três Runas.",

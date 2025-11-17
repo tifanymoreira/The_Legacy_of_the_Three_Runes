@@ -35,6 +35,7 @@ export default class GameScene extends Phaser.Scene {
     this.wasInAir = false;
     
     this.isTransitioning = false;
+    this.isDead = false;
   }
 
   // Cria os elementos visuais e lógicos da cena
@@ -46,6 +47,10 @@ export default class GameScene extends Phaser.Scene {
     // Sons de movimento (loop)
     this.walkSound = this.sound.add('walking', { loop: true, volume: 0.5 });
     this.runSound = this.sound.add('running', { loop: true, volume: 0.5 });
+    
+    // Sons dos botões (para a tela de morte)
+    this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 })
+    this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 })
     
     this.createBackground();
     this.createGround();
@@ -88,7 +93,7 @@ export default class GameScene extends Phaser.Scene {
   // Lógica do Teclado (Update)
   update() {
 
-    if (this.health === 0 || this.isTransitioning) {
+    if (this.health === 0 || this.isTransitioning || this.isDead) {
       this.walkSound.stop();
       this.runSound.stop();
       return;
@@ -249,12 +254,12 @@ export default class GameScene extends Phaser.Scene {
   createFires() {
     this.fires = this.physics.add.staticGroup();
     const fireLocations = [
-      { x: 300, y: 535 }, // Chão principal (Y=565 - 30)
-      { x: 500, y: 535 }, // Chão principal
-      { x: 700, y: 535 }, // Chão principal
-      { x: 100, y: 181 }, // Plataforma de cima (Y=201 - 20)
-      { x: 350, y: 181 }, // Plataforma de cima
-      { x: 600, y: 181 }  // Plataforma de cima
+      { x: 300, y: 535 },
+      { x: 500, y: 535 },
+      { x: 700, y: 535 },
+      { x: 100, y: 181 },
+      { x: 350, y: 181 },
+      { x: 600, y: 181 }
     ];
     fireLocations.forEach(fire => {
       this.fires.create(fire.x, fire.y, 'fire')
@@ -270,6 +275,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   collectFire(player, fire) {
+    if (this.isDead || this.isTransitioning) return;
+    
     fire.disableBody(true, true);
     this.score += 1;
     this.scoreText.setText(this.score);
@@ -350,7 +357,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   takeDamage(amount) {
-    if (this.health === 0 || this.isTransitioning) return;
+    if (this.health === 0 || this.isTransitioning || this.isDead) return;
 
     this.health -= amount;
     if (this.health < 0) {
@@ -360,25 +367,31 @@ export default class GameScene extends Phaser.Scene {
     this.updateHealthUI();
 
     if (this.health === 0) {
+      // --- MORTE ---
+      this.isDead = true;
       this.sound.play('dead'); 
       this.player.setVelocity(0, 0);
       this.player.play('anim_dead', true); 
       this.player.body.setGravityY(0); 
       this.player.body.enable = false; 
+      
+      this.walkSound.stop();
+      this.runSound.stop();
 
-      this.player.on(Phaser.Animations.Events.ANIMATION_COMPLETE, (anim) => {
-        if (anim.key === 'anim_dead') {
-          this.cameras.main.fadeOut(1000, 0, 0, 0);
-          this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.music.stop();
-            this.walkSound.stop();
-            this.runSound.stop();
-            this.scene.restart();
-          });
-        }
+      // [CORREÇÃO APLICADA AQUI]
+      // Usamos 'once' para garantir que o evento dispare apenas uma vez.
+      // Usamos 'animationcomplete-anim_dead' para ouvir especificamente a animação de morte,
+      // em vez de qualquer animação.
+      this.player.once('animationcomplete-anim_dead', () => {
+        this.cameras.main.fadeOut(1000, 0, 0, 0);
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+          this.music.stop();
+          this.showDeathScreen();
+        });
       }, this);
 
     } else {
+      // --- DANO ---
       this.sound.play('hurt'); 
       this.player.play('anim_hurt');
       this.tweens.add({
@@ -411,7 +424,6 @@ export default class GameScene extends Phaser.Scene {
     ).setOrigin(0.5, 0.5)
      .setScrollFactor(0);
 
-    // Duração de 10 segundos
     this.time.delayedCall(10000, () => {
       this.tweens.add({
         targets: instructionText,
@@ -447,5 +459,99 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.start('SecondRuneScene');
     });
+  }
+  
+  showDeathScreen() {
+    const centerX = this.config.width / 2;
+    const centerY = this.config.height / 2;
+
+    this.add.text(centerX, centerY - 100, 'Você morreu', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '64px',
+      fill: '#ff0000',
+      stroke: '#000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setScrollFactor(0);
+
+    this.add.text(centerX, centerY, 'As Runas se apagam... a escuridão prevalece.', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '24px',
+      fill: '#ffffff',
+      stroke: '#000',
+      strokeThickness: 3
+    }).setOrigin(0.5).setScrollFactor(0);
+
+    this.createButton(centerX, centerY + 100, 'Recomeçar', () => {
+      this.cameras.main.fadeIn(500, 0, 0, 0);
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => {
+        this.scene.restart();
+      });
+    }).setScrollFactor(0);
+  }
+  
+  createButton(x, y, text, onClick) {
+    const buttonWidth = 280;
+    const buttonHeight = 60;
+
+    const bgColor = 0x1a1a1a;
+    const strokeColor = 0x555555;
+    const textColor = '#E0E0E0';
+    
+    const hoverBgColor = 0x333333;
+    const hoverStrokeColor = 0xaaaaaa;
+    const hoverTextColor = '#ffffff';
+
+    const buttonBG = this.add.graphics()
+      .fillStyle(bgColor, 0.8)
+      .lineStyle(3, strokeColor, 1.0)
+      .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+      .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+
+    const buttonText = this.add.text(0, 0, text, {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '36px',
+      fill: textColor,
+      stroke: '#000',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+
+    const buttonContainer = this.add.container(x, y, [buttonBG, buttonText])
+      .setSize(buttonWidth, buttonHeight)
+      .setInteractive();
+
+    buttonContainer.on('pointerover', () => {
+      this.buttonSelect.play();
+      buttonBG.clear()
+        .fillStyle(hoverBgColor, 0.9)
+        .lineStyle(3, hoverStrokeColor, 1.0)
+        .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+        .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+      buttonText.setFill(hoverTextColor);
+    });
+
+    buttonContainer.on('pointerout', () => {
+      this.buttonSelect.play();
+      buttonBG.clear()
+        .fillStyle(bgColor, 0.8)
+        .lineStyle(3, strokeColor, 1.0)
+        .fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5)
+        .strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 5);
+      buttonText.setFill(textColor);
+    });
+
+    buttonContainer.on('pointerdown', () => {
+      this.buttonPress.play();
+      buttonContainer.setScale(0.98);
+    });
+    
+    buttonContainer.on('pointerup', (pointer) => {
+      this.buttonPress.play();
+      buttonContainer.setScale(1.0);
+      if (buttonContainer.getBounds().contains(pointer.x, pointer.y)) {
+        onClick();
+      }
+    });
+
+    return buttonContainer;
   }
 }

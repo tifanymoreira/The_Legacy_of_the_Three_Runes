@@ -26,7 +26,7 @@ const SCENES = [
   MenuScene,
   IntroductionScene,
   GameScene,
-  SecondRuneScene
+  SecondRuneScene,
 ]
 
 // Cria uma instância de cena com a configuração compartilhada
