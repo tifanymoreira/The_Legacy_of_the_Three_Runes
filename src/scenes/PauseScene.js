@@ -45,7 +45,7 @@ export default class PauseScene extends Phaser.Scene {
 
     this.createButton(width / 2, startY + (spacing * 2), 'Reiniciar Jornada', () => {
       this.scene.stop(this.currentSceneKey);
-      this.scene.start('IntroductionScene'); // Volta para a intro/começo
+      this.scene.start('GameScene'); 
       this.scene.stop();
     });
 
