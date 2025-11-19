@@ -61,7 +61,7 @@ export default class GameScene extends Phaser.Scene {
     this.createFires(); 
 
     this.createUI();
-    this.createPauseButton(); // <--- ADICIONADO O BOTÃO DE PAUSE
+    this.createPauseButton(); 
 
     // Configura física do Player
     this.player.body.setGravityY(this.gravity);

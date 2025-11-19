@@ -146,7 +146,7 @@ export default class MenuScene extends Phaser.Scene {
 
     // 1. Overlay (Fundo)
     const overlay = this.add.graphics()
-      .fillStyle(0x000000, 0.8)
+      .fillStyle(0x000000, 0)
       .fillRect(0, 0, gameWidth, gameHeight)
       .setInteractive()
       .on('pointerdown', () => { });

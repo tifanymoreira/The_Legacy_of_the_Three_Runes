@@ -21,6 +21,7 @@ export default class IntroductionScene extends Phaser.Scene {
   }
 
   init() {
+    
     // Resetar variáveis para cada vez que a cena é iniciada
     this.player = null;
     this.dialogueBox = null;
@@ -51,14 +52,14 @@ export default class IntroductionScene extends Phaser.Scene {
   create() {
     // Tecla de espaço para avançar o diálogo
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
+    
     // Toca a música de ambiente em loop
     this.ambienceSound = this.sound.add('ambience_introduction', { loop: true, volume: 0.5 });
     this.ambienceSound.play();
-
+    
     // Prepara o som de digitação, mas não toca ainda
     this.typingSound = this.sound.add('dialog_introduction', { loop: true, volume: 0.8 });
-
+    
     // 1. Criar Background
     const bg = this.add.image(
       this.config.width * 0.5,
@@ -74,12 +75,12 @@ export default class IntroductionScene extends Phaser.Scene {
     ).setScale(1.5);
     
     this.player.play('anim_walk', true); 
-
+    
     // Som de Caminhada
     this.walking_sound = this.sound.add('walking', { loop: true, volume: 0.5 });
     this.walking_sound.play();
-
-
+    
+    
     // 3. Mover o Player (Cutscene)
     this.tweens.add({
       targets: this.player,
@@ -94,6 +95,10 @@ export default class IntroductionScene extends Phaser.Scene {
         if (this.walking_sound) this.walking_sound.stop();
       }
     });
+
+    this.createPauseButton(); 
+    this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 })
+    this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 })
   }
 
   // LÓGICA DE UPDATE ===
@@ -200,6 +205,48 @@ export default class IntroductionScene extends Phaser.Scene {
     } else {
       this.endCutscene();
     }
+  }
+
+  createPauseButton() {
+    const margin = 20;
+    const x = this.config.width - margin;
+    const y = margin;
+
+    // Fundo do botão
+    const btnBg = this.add.graphics();
+    btnBg.fillStyle(0x1a1a1a, 0.8);
+    btnBg.lineStyle(2, 0xffffff, 1);
+    btnBg.fillRoundedRect(-25, -20, 50, 40, 5);
+    btnBg.strokeRoundedRect(-25, -20, 50, 40, 5);
+
+    // Texto ou Ícone "||"
+    const btnText = this.add.text(0, 0, 'II', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '24px',
+      fill: '#fff',
+      stroke: '#000',
+      strokeThickness: 2
+    }).setOrigin(0.5);
+
+    const pauseContainer = this.add.container(x, y + 20, [btnBg, btnText])
+      .setSize(50, 40)
+      .setScrollFactor(0)
+      .setInteractive();
+
+    pauseContainer.on('pointerover', () => {
+      btnText.setFill('#ffff00');
+    });
+
+    pauseContainer.on('pointerout', () => {
+      btnText.setFill('#ffffff');
+    });
+
+    pauseContainer.on('pointerdown', () => {
+      this.buttonPress.play();
+      // Pausa a cena atual
+      this.scene.pause();
+      this.scene.launch('PauseScene', { currentSceneKey: 'IntroductionScene' });
+    });
   }
 
   typeCharacter() {
