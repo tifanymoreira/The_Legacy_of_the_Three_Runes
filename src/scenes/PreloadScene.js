@@ -49,7 +49,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.audio('running', 'assets/sound_effect/running.mp3');
     this.load.audio('jumping', 'assets/sound_effect/jumping.mp3');
     this.load.audio('landing', 'assets/sound_effect/landing.mp3');
-    this.load.audio('sword_1', 'assets/sound_effect/sword_1.mp3');
+    this.load.audio('sword_1', 'assets/sound_effect/sword_1.mp3'); 
     this.load.audio('sword_2', 'assets/sound_effect/sword_2.mp3');
     this.load.audio('hurt', 'assets/sound_effect/hurt.mp3');
     this.load.audio('dead', 'assets/sound_effect/dead.mp3');
