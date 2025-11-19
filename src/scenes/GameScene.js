@@ -48,7 +48,7 @@ export default class GameScene extends Phaser.Scene {
     this.walkSound = this.sound.add('walking', { loop: true, volume: 0.5 });
     this.runSound = this.sound.add('running', { loop: true, volume: 0.5 });
     
-    // Sons dos botões (para a tela de morte)
+    // Sons dos botões
     this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 })
     this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 })
     
@@ -61,6 +61,7 @@ export default class GameScene extends Phaser.Scene {
     this.createFires(); 
 
     this.createUI();
+    this.createPauseButton(); // <--- ADICIONADO O BOTÃO DE PAUSE
 
     // Configura física do Player
     this.player.body.setGravityY(this.gravity);
@@ -334,6 +335,49 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  createPauseButton() {
+    const margin = 20;
+    const x = this.config.width - margin;
+    const y = margin;
+
+    // Fundo do botão
+    const btnBg = this.add.graphics();
+    btnBg.fillStyle(0x1a1a1a, 0.8);
+    btnBg.lineStyle(2, 0xffffff, 1);
+    btnBg.fillRoundedRect(-25, -20, 50, 40, 5);
+    btnBg.strokeRoundedRect(-25, -20, 50, 40, 5);
+
+    // Texto ou Ícone "||"
+    const btnText = this.add.text(0, 0, 'II', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '24px',
+      fill: '#fff',
+      stroke: '#000',
+      strokeThickness: 2
+    }).setOrigin(0.5);
+
+    const pauseContainer = this.add.container(x, y + 20, [btnBg, btnText])
+      .setSize(50, 40)
+      .setScrollFactor(0)
+      .setInteractive();
+
+    pauseContainer.on('pointerover', () => {
+      btnText.setFill('#ffff00');
+    });
+
+    pauseContainer.on('pointerout', () => {
+      btnText.setFill('#ffffff');
+    });
+
+    pauseContainer.on('pointerdown', () => {
+      this.buttonPress.play();
+      // Pausa a cena atual
+      this.scene.pause();
+      // Lança a cena de Pause, passando a chave da cena atual para saber qual reiniciar
+      this.scene.launch('PauseScene', { currentSceneKey: 'GameScene' });
+    });
+  }
+
   updateHealthUI() {
     let currentHealth = this.health;
     this.hearts.forEach((heart) => {
@@ -378,10 +422,6 @@ export default class GameScene extends Phaser.Scene {
       this.walkSound.stop();
       this.runSound.stop();
 
-      // [CORREÇÃO APLICADA AQUI]
-      // Usamos 'once' para garantir que o evento dispare apenas uma vez.
-      // Usamos 'animationcomplete-anim_dead' para ouvir especificamente a animação de morte,
-      // em vez de qualquer animação.
       this.player.once('animationcomplete-anim_dead', () => {
         this.cameras.main.fadeOut(1000, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

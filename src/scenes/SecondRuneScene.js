@@ -48,7 +48,7 @@ export default class SecondRuneScene extends Phaser.Scene {
     this.walkSound = this.sound.add('walking', { loop: true, volume: 0.5 });
     this.runSound = this.sound.add('running', { loop: true, volume: 0.5 });
     
-    // Sons dos botões (para a tela de morte)
+    // Sons dos botões
     this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 })
     this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 })
 
@@ -59,6 +59,7 @@ export default class SecondRuneScene extends Phaser.Scene {
     this.createPlayer();
     this.createFires();
     this.createUI();
+    this.createPauseButton(); // <--- ADICIONADO O BOTÃO DE PAUSE
 
     // Física do Player
     this.player.body.setGravityY(this.gravity);
@@ -312,6 +313,46 @@ export default class SecondRuneScene extends Phaser.Scene {
     }
   }
 
+  createPauseButton() {
+    const margin = 20;
+    const x = this.config.width - margin;
+    const y = margin;
+
+    const btnBg = this.add.graphics();
+    btnBg.fillStyle(0x1a1a1a, 0.8);
+    btnBg.lineStyle(2, 0xffffff, 1);
+    btnBg.fillRoundedRect(-25, -20, 50, 40, 5);
+    btnBg.strokeRoundedRect(-25, -20, 50, 40, 5);
+ 
+    const btnText = this.add.text(0, 0, 'II', {
+      fontFamily: 'MedievalSharp, serif',
+      fontSize: '24px',
+      fill: '#fff',
+      stroke: '#000',
+      strokeThickness: 2
+    }).setOrigin(0.5);
+
+    const pauseContainer = this.add.container(x, y + 20, [btnBg, btnText])
+      .setSize(50, 40)
+      .setScrollFactor(0)
+      .setInteractive();
+
+    pauseContainer.on('pointerover', () => {
+      btnText.setFill('#ffff00');
+    });
+
+    pauseContainer.on('pointerout', () => {
+      btnText.setFill('#ffffff');
+    });
+
+    pauseContainer.on('pointerdown', () => {
+      this.buttonPress.play();
+      // Pausa a cena atual
+      this.scene.pause();
+      this.scene.launch('PauseScene', { currentSceneKey: 'SecondRuneScene' });
+    });
+  }
+
   updateHealthUI() {
     let currentHealth = this.health;
     this.hearts.forEach((heart) => {
@@ -351,7 +392,6 @@ export default class SecondRuneScene extends Phaser.Scene {
       this.walkSound.stop();
       this.runSound.stop();
 
-      // [CORREÇÃO APLICADA AQUI]
       this.player.once('animationcomplete-anim_dead', () => {
         this.cameras.main.fadeOut(1000, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

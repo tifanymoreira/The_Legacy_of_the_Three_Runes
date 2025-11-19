@@ -6,6 +6,7 @@ import MenuScene from './scenes/MenuScene.js';
 import IntroductionScene from './scenes/IntroductionScene.js';
 import GameScene from './scenes/GameScene.js';
 import SecondRuneScene from './scenes/SecondRuneScene.js';
+import PauseScene from './scenes/PauseScene.js'; // <--- Importado
 
 // Configurações globais
 
@@ -27,6 +28,7 @@ const SCENES = [
   IntroductionScene,
   GameScene,
   SecondRuneScene,
+  PauseScene, // <--- Adicionado
 ]
 
 // Cria uma instância de cena com a configuração compartilhada
