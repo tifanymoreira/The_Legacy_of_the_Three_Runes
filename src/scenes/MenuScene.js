@@ -4,30 +4,27 @@ export default class MenuScene extends Phaser.Scene {
 
   constructor() {
     super({ key: 'MenuScene' });
-    this.controlsModal = null; // Container para o modal
+    this.controlsModal = null; // Container para o modal de controles
   }
 
   create() {
-    // 1. Adicionar o background e música
+    // 1. Cenário e Música
     this.add.image(
       this.cameras.main.width * 0.5,
       this.cameras.main.height * 0.5,
       'menu_background'
     ).setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
-    // Toca a música de ambiente em loop
     this.menuSound = this.sound.add('menu_sound', { loop: true, volume: 0.5 });
     this.menuSound.play();
-
 
     this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 })
     this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 })
 
-
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
 
-    // 2. Botão "Começar"
+    // 2. Criação de Botões
     this.createButton(
       centerX,
       centerY - 50,
@@ -35,7 +32,6 @@ export default class MenuScene extends Phaser.Scene {
       this.startGame.bind(this)
     );
 
-    // 3. Botão "Controles"
     this.createButton(
       centerX,
       centerY + 30,
@@ -44,9 +40,10 @@ export default class MenuScene extends Phaser.Scene {
     );
   }
 
-  /**
-   * Inicia a transição para a cena de Introdução
-   */
+  // =================================================================
+  // AÇÕES
+  // =================================================================
+
   startGame() {
     if (this.controlsModal) {
       return
@@ -59,13 +56,7 @@ export default class MenuScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Cria um botão customizado no estilo medieval
-   * @param {number} x - Posição X central
-   * @param {number} y - Posição Y central
-   * @param {string} text - Texto do botão
-   * @param {function} onClick - Função a ser chamada no clique
-   */
+  // Helper de Botão Reutilizável
   createButton(x, y, text, onClick) {
     const buttonWidth = 280;
     const buttonHeight = 60;
@@ -132,9 +123,10 @@ export default class MenuScene extends Phaser.Scene {
     return buttonContainer;
   }
 
-  /**
-   * Cria e exibe o modal de Controles
-   */
+  // =================================================================
+  // MODAL DE CONTROLES
+  // =================================================================
+
   showControlsModal() {
     if (this.controlsModal) {
       this.controlsModal.destroy();
@@ -144,21 +136,21 @@ export default class MenuScene extends Phaser.Scene {
     const modalHeight = 400;
     const { width: gameWidth, height: gameHeight } = this.cameras.main;
 
-    // 1. Overlay (Fundo)
+    // Overlay (Fundo Transparente)
     const overlay = this.add.graphics()
       .fillStyle(0x000000, 0)
       .fillRect(0, 0, gameWidth, gameHeight)
       .setInteractive()
       .on('pointerdown', () => { });
 
-    // 2. Painel do Modal
+    // Painel Principal
     const panel = this.add.graphics()
       .fillStyle(0x111111, 0.95)
       .lineStyle(4, 0x888888, 1.0)
       .fillRoundedRect(-modalWidth / 2, -modalHeight / 2, modalWidth, modalHeight, 10)
       .strokeRoundedRect(-modalWidth / 2, -modalHeight / 2, modalWidth, modalHeight, 10);
 
-    // 3. Título
+    // Título
     const title = this.add.text(0, -modalHeight / 2 + 40, 'Controles', {
       fontFamily: 'MedievalSharp, serif',
       fontSize: '48px',
@@ -167,14 +159,13 @@ export default class MenuScene extends Phaser.Scene {
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    // 4. Texto dos Controles
+    // Texto descritivo
     const controlsText = [
       '[Setas Esq/Dir]: Mover Personagem',
       '[Seta Cima]: Pular',
       '[Shift]: Correr',
       '[Espaço]: Ataque Rápido',
-      '[E]: Ataque Forte',
-      '[H]: Tomar Dano (Debug)'
+      '[E]: Ataque Forte'
     ].join('\n');
 
     const text = this.add.text(-20, 20, controlsText, {
@@ -185,7 +176,7 @@ export default class MenuScene extends Phaser.Scene {
       lineSpacing: 12
     }).setOrigin(0.5);
 
-    // 5. Botão Fechar
+    // Botão Fechar (X)
     const closeButton = this.add.text(modalWidth / 2 - 30, -modalHeight / 2 + 30, 'X', {
       fontFamily: 'MedievalSharp, serif',
       fontSize: '32px',
@@ -204,7 +195,7 @@ export default class MenuScene extends Phaser.Scene {
       }
     });
 
-    // 6. Container do Modal
+    // Container Final
     this.controlsModal = this.add.container(
       gameWidth / 2,
       gameHeight / 2,

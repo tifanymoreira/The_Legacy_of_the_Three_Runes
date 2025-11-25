@@ -1,43 +1,51 @@
 import Phaser from 'phaser';
 
-// Importa as cenas do jogo
+// Importação das Cenas
 import PreloadScene from './scenes/PreloadScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import IntroductionScene from './scenes/IntroductionScene.js';
 import GameScene from './scenes/GameScene.js';
 import SecondRuneScene from './scenes/SecondRuneScene.js';
-import PauseScene from './scenes/PauseScene.js'; // <--- Importado
+import PauseScene from './scenes/PauseScene.js';
+import FinalBossCutScene from './scenes/FinalBossCutScene.js';
+import FinalBossScene from './scenes/FinalBossScene.js';
+import ThirdRuneScene from './scenes/ThirdRuneScene.js';
 
-// Configurações globais
+// =================================================================
+// CONFIGURAÇÕES GLOBAIS
+// =================================================================
 
-// Dimensões da tela do jogo
 const WIDTH = 1000;
 const HEIGHT = 700;
 
-// Configurações compartilhadas entre as cenas
 const SHARED_CONFIG = {
   width: WIDTH,
   height: HEIGHT,
   debug: false
 };
 
-// Lista das cenas que compõem o jogo
+// =================================================================
+// LISTA DE CENAS ATIVAS
+// =================================================================
 const SCENES = [
   PreloadScene,
   MenuScene,
   IntroductionScene,
   GameScene,
   SecondRuneScene,
-  PauseScene, // <--- Adicionado
+  ThirdRuneScene,
+  FinalBossCutScene,
+  FinalBossScene,
+  PauseScene,
 ]
 
-// Cria uma instância de cena com a configuração compartilhada
+// Cenas
 const createScene = Scene => new Scene(SHARED_CONFIG);
-
-// Inicializa todas as cenas do jogo
 const initScenes = () => SCENES.map(createScene);
 
-// Configuração geral do Phaser.Game
+// =================================================================
+// INICIALIZAÇÃO DO PHASER GAME
+// =================================================================
 const config = {
   type: Phaser.AUTO,
   ...SHARED_CONFIG,
@@ -57,5 +65,4 @@ const config = {
   scene: initScenes()
 };
 
-// Inicializa a instância principal do jogo com a configuração definida
 new Phaser.Game(config);

@@ -9,13 +9,16 @@ export default class PauseScene extends Phaser.Scene {
         this.currentSceneKey = data.currentSceneKey;
     }
 
+    // =================================================================
+    // CREATE
+    // =================================================================
     create() {
-        // Sons (reaproveitando os carregados no PreloadScene)
         this.buttonSelect = this.sound.add('button_select', { loop: false, volume: 0.5 });
         this.buttonPress = this.sound.add('button_press', { loop: false, volume: 0.5 });
 
         const { width, height } = this.cameras.main;
 
+        // Fundo Escuro Semi-transparente
         this.add.graphics()
             .fillStyle(0x000000, 0.7)
             .fillRect(0, 0, width, height);
@@ -31,14 +34,15 @@ export default class PauseScene extends Phaser.Scene {
         const startY = height / 2 - 50;
         const spacing = 70;
 
+        // Menu Diferente dependendo da cena de origem
         if (this.currentSceneKey !== "IntroductionScene") {
+            // Opções Completas (Gameplay)
             this.createButton(width / 2, startY, 'Continuar', () => {
                 this.scene.resume(this.currentSceneKey);
                 this.scene.stop();
             });
 
             this.createButton(width / 2, startY + spacing, 'Reiniciar Fase', () => {
-
                 this.scene.stop(this.currentSceneKey);
                 this.scene.start(this.currentSceneKey);
                 this.scene.stop();
@@ -56,6 +60,7 @@ export default class PauseScene extends Phaser.Scene {
                 this.scene.stop();
             });
         } else {
+            // Opções Simples (Cutscene)
             this.createButton(width / 2, startY, 'Continuar', () => {
                 this.scene.resume(this.currentSceneKey);
                 this.scene.stop();
@@ -66,9 +71,11 @@ export default class PauseScene extends Phaser.Scene {
                 this.scene.stop();
             });
         }
-
     }
 
+    // =================================================================
+    // FACTORY DE BOTÕES
+    // =================================================================
     createButton(x, y, text, onClick) {
         const buttonWidth = 320;
         const buttonHeight = 55;
